@@ -2,13 +2,10 @@ import argparse
 import os
 import csv
 import sys
-from numpy.core.records import array
-from numpy.lib.function_base import append
 import xlrd
 import pandas as pd
-from xml.etree.ElementTree import tostring
 from pandas.core.frame import DataFrame
-from xlrd.biffh import XLRDError
+from xlrd.biffh import DATEFORMAT, XLRDError
 from xlrd.formula import dump_formula
 xlrd.xlsx.ensure_elementtree_imported(False, None)
 xlrd.xlsx.Element_has_iter = True
@@ -26,7 +23,7 @@ def findmaxcolumncount(DataFrame):
 #Read HTML file disguised as an Excel file
 def readhtmlfile(filepath):
 	try:
-		data_xls = pd.read_html(filepath)
+		data_xls = pd.read_html(filepath,parse_dates=True,na_values='')
 		return data_xls
 	except FileNotFoundError:
 		sys.stderr.write('File does not exist')
@@ -38,22 +35,24 @@ def readhtmlfile(filepath):
 		sys.exit(2)
 
 #Read Tab delimited file disguised as an Excel file
-def readtabfile(filepath):
+def readtextfile(filepath, delimeter=','):
 	try:
 #		data_xls = pd.read_table(filepath, error_bad_lines=False)
-		with open(filepath,newline="") as tab_temp:                                                                                          
+		with open(filepath,'r',newline='') as tab_temp:                                                                                          
 			datafile = tab_temp.readlines()
 			temparray1 = []
 			maxlength = 0
 			for line in datafile:
-				temparray = line.split('\t')
+				temparray = line.split(delimeter)
+				temparray = [item.replace('\n', '') for item in temparray]
 				if len(temparray1) > maxlength:
 					maxlength = len(temparray)
 				list.insert(temparray1,len(temparray1),temparray)
 			temparray2 = []
 			for temp in temparray1:
 				while (len(temp) <= maxlength):
-							temp.append(" ")
+							temp.append('')
+							temp = [item.replace('\r', '') for item in temp]
 				list.insert(temparray2,len(temparray2),temp)
 			data_xls = temparray2
 			return data_xls
@@ -122,6 +121,12 @@ def writecsv(data_xls,filepath,maxlength=-2):
 			for data in data_xls:
 				for value in data.values:
 						temparray = list(value)
+						i=0
+						for element in temparray:
+							if str(element).__eq__("nan"):
+								print(element, i)
+								temparray[i] = ""
+							i=i+1
 						if maxlength > 0:
 							while (len(temparray) <= maxlength):
 								temparray.append(" ")
@@ -137,13 +142,17 @@ def writecsv(data_xls,filepath,maxlength=-2):
 		sys.stderr.flush
 		sys.exit(2)
 
-
 parser = argparse.ArgumentParser()
 
+parser.add_argument('--destination', '-d', help = 'Please, provide the destination', type = str, default = "C:\\Users\\Pash\\Downloads\\result.csv")
 #parser.add_argument('--source', '-s', help = 'Please, provide the source', type = str, default = "C:\\Users\\Pash\\Downloads\\CES FNY Managed Accounts LLC User Detail.xlsx")
+#parser.add_argument('--source', '-s', help = 'Please, provide the source', type = str, default = "C:\\Users\\Pash\\Downloads\\result1.csv")
 #parser.add_argument('--source', '-s', help = 'Please, provide the source', type = str, default = "C:\\Users\\Pash\\Downloads\\test_html.xls")
-parser.add_argument('--source', '-s', help = 'Please, provide the source', type = str)#, default = "C:\\Users\\Pash\\Downloads\\test_tab.xls")
-parser.add_argument('--destination', '-d', help = 'Please, provide the destination', type = str)#, default = "C:\\Users\\Pash\\Downloads\\result.csv")
+#parser.add_argument('--source', '-s', help = 'Please, provide the source', type = str, default = "C:\\Users\\Pash\\Downloads\\test_tab.xls")
+parser.add_argument('--source', '-s', help = 'Please, provide the source', type = str, default = "C:\\Users\\Pash\\Downloads\\test_nan.xls")
+#parser.add_argument('--source', '-s', help = 'Please, provide the source', type = str, default = "C:\\Users\\Pash\\Downloads\\test_date.xlsx")
+#parser.add_argument('--source', '-s', help = 'Please, provide the source', type = str)
+#parser.add_argument('--destination', '-d', help = 'Please, provide the destination', type = str)
 parser.add_argument('--remove', '-r', help = 'Please, if source to be removed', type = bool, default=False)
 parser.add_argument('--overwrite', '-o', help = 'Please, if destination to be overwritten', type = bool, default=False)
 
@@ -160,7 +169,7 @@ print(parser.format_help())
 #   -h, --help          show this help message
 #   -o, --overwrite     overwrite destination file if exist
 
-if not (".xls" in str(args.source).lower()):
+if not (".xls" in str(args.source).lower() or ".csv" in str(args.source).lower()):
 	sys.stderr.write('Source file does not appear to be an Excel file.')
 	sys.stderr.flush
 	sys.exit(2)
@@ -170,36 +179,39 @@ if not (".csv" in str(args.destination).lower() or ".txt" in str(args.destinatio
 	sys.stderr.flush
 	sys.exit(2)
 
-try:
-	WorkBook = xlrd.open_workbook(args.source)
-	Sheet = WorkBook.sheet_by_index(0)
-	with open(args.destination, 'w', encoding='utf8',newline='') as your_csv_file:
-		wr = csv.writer(your_csv_file, quoting=csv.QUOTE_ALL)
+if (".csv" in str(args.source).lower()):
+	writetabfile(readtextfile(args.source,','),args.destination)
+else:
+	try:
+		WorkBook = xlrd.open_workbook(args.source)
+		Sheet = WorkBook.sheet_by_index(0)
+		with open(args.destination, 'w', encoding='utf8',newline='') as your_csv_file:
+			wr = csv.writer(your_csv_file, quoting=csv.QUOTE_ALL)
 
-		for rownum in range(Sheet.nrows):
-			wr.writerow(Sheet.row_values(rownum))
+			for rownum in range(Sheet.nrows):
+				wr.writerow(Sheet.row_values(rownum))
 
 
-except FileNotFoundError:
-	sys.stderr.write('File does not exist')
-	sys.stderr.flush
-	sys.exit(2)
-except PermissionError:
-	sys.stderr.write('Could not access the file')
-	sys.stderr.flush
-	sys.exit(2)
-except XLRDError:
-	if itsatabfile(args.source):
-		data_xls = readtabfile(args.source)
-		if len(data_xls) > 0:
-			writetabfile(data_xls,args.destination)
-	else:
-		data_xls = readhtmlfile(args.source)
-		if len(data_xls) > 0:
-			writecsv(data_xls,args.destination,findmaxcolumncount(data_xls))    
-except Exception as e:
-	sys.stderr.write('Error: ' + str(e) )
-	sys.stderr.flush
-	sys.exit(2)
-#else:
-#finally:
+	except FileNotFoundError:
+		sys.stderr.write('File does not exist')
+		sys.stderr.flush
+		sys.exit(2)
+	except PermissionError:
+		sys.stderr.write('Could not access the file')
+		sys.stderr.flush
+		sys.exit(2)
+	except XLRDError:
+		if itsatabfile(args.source):
+			data_xls = readtextfile(args.source, '\t')
+			if len(data_xls) > 0:
+				writetabfile(data_xls,args.destination)
+		else:
+			data_xls = readhtmlfile(args.source)
+			if len(data_xls) > 0:
+				writecsv(data_xls,args.destination,findmaxcolumncount(data_xls))    
+	except Exception as e:
+		sys.stderr.write('Error: ' + str(e) )
+		sys.stderr.flush
+		sys.exit(2)
+	#else:
+	#finally:
