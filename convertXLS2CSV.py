@@ -124,7 +124,6 @@ def writecsv(data_xls,filepath,maxlength=-2):
 						i=0
 						for element in temparray:
 							if str(element).__eq__("nan"):
-								print(element, i)
 								temparray[i] = ""
 							i=i+1
 						if maxlength > 0:
@@ -144,15 +143,16 @@ def writecsv(data_xls,filepath,maxlength=-2):
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--destination', '-d', help = 'Please, provide the destination', type = str, default = "C:\\Users\\Pash\\Downloads\\result.csv")
+#parser.add_argument('--destination', '-d', help = 'Please, provide the destination', type = str, default = "C:\\Users\\Pash\\Downloads\\result.csv")
 #parser.add_argument('--source', '-s', help = 'Please, provide the source', type = str, default = "C:\\Users\\Pash\\Downloads\\CES FNY Managed Accounts LLC User Detail.xlsx")
 #parser.add_argument('--source', '-s', help = 'Please, provide the source', type = str, default = "C:\\Users\\Pash\\Downloads\\result1.csv")
 #parser.add_argument('--source', '-s', help = 'Please, provide the source', type = str, default = "C:\\Users\\Pash\\Downloads\\test_html.xls")
 #parser.add_argument('--source', '-s', help = 'Please, provide the source', type = str, default = "C:\\Users\\Pash\\Downloads\\test_tab.xls")
-parser.add_argument('--source', '-s', help = 'Please, provide the source', type = str, default = "C:\\Users\\Pash\\Downloads\\test_nan.xls")
+#parser.add_argument('--source', '-s', help = 'Please, provide the source', type = str, default = "C:\\Users\\Pash\\Downloads\\test_nan.xls")
 #parser.add_argument('--source', '-s', help = 'Please, provide the source', type = str, default = "C:\\Users\\Pash\\Downloads\\test_date.xlsx")
-#parser.add_argument('--source', '-s', help = 'Please, provide the source', type = str)
-#parser.add_argument('--destination', '-d', help = 'Please, provide the destination', type = str)
+
+parser.add_argument('--source', '-s', help = 'Please, provide the source', type = str)
+parser.add_argument('--destination', '-d', help = 'Please, provide the destination', type = str)
 parser.add_argument('--remove', '-r', help = 'Please, if source to be removed', type = bool, default=False)
 parser.add_argument('--overwrite', '-o', help = 'Please, if destination to be overwritten', type = bool, default=False)
 
