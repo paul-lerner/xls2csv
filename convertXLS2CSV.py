@@ -183,13 +183,15 @@ if (".csv" in str(args.source).lower()):
 	writetabfile(readtextfile(args.source,','),args.destination)
 else:
 	try:
-		WorkBook = xlrd.open_workbook(args.source)
-		Sheet = WorkBook.sheet_by_index(0)
-		with open(args.destination, 'w', encoding='utf8',newline='') as your_csv_file:
-			wr = csv.writer(your_csv_file, quoting=csv.QUOTE_ALL)
+		Workbook = pd.read_excel(args.source)
+		Workbook.to_csv(args.destination)
+#		WorkBook = xlrd.open_workbook(args.source)
+#		Sheet = WorkBook.sheet_by_index(0)
+#		with open(args.destination, 'w', encoding='utf8',newline='') as your_csv_file:
+#			wr = csv.writer(your_csv_file, quoting=csv.QUOTE_ALL)
 
-			for rownum in range(Sheet.nrows):
-				wr.writerow(Sheet.row_values(rownum))
+#			for rownum in range(Sheet.nrows):
+#				wr.writerow(Sheet.row_values(rownum))
 
 
 	except FileNotFoundError:
