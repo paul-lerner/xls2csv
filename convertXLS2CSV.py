@@ -184,7 +184,7 @@ if (".csv" in str(args.source).lower()):
 else:
 	try:
 		Workbook = pd.read_excel(args.source)
-		Workbook.to_csv(args.destination)
+		Workbook.to_csv(args.destination,index=False)
 #		WorkBook = xlrd.open_workbook(args.source)
 #		Sheet = WorkBook.sheet_by_index(0)
 #		with open(args.destination, 'w', encoding='utf8',newline='') as your_csv_file:
@@ -202,7 +202,7 @@ else:
 		sys.stderr.write('Could not access the file')
 		sys.stderr.flush
 		sys.exit(2)
-	except XLRDError:
+	except ValueError:
 		if itsatabfile(args.source):
 			data_xls = readtextfile(args.source, '\t')
 			if len(data_xls) > 0:
